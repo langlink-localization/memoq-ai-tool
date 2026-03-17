@@ -1,0 +1,31 @@
+{
+  "productName": "memoQ AI Gateway",
+  "contractVersion": "1",
+  "defaultHost": "127.0.0.1",
+  "defaultPort": 5271,
+  "routes": {
+    "health": "/health",
+    "desktopVersion": "/desktop/version",
+    "integrationStatus": "/desktop/integration/status",
+    "integrationInstall": "/desktop/integration/install",
+    "integrationRepair": "/desktop/integration/repair",
+    "mtTranslate": "/mt/translate",
+    "tmLookup": "/tm/lookup",
+    "tbSearch": "/tb/search",
+    "qaCheck": "/qa/check"
+  },
+  "integration": {
+    "pluginDllName": "MemoQ.AIGateway.Plugin.dll",
+    "clientDevConfigName": "ClientDevConfig.xml",
+    "clientDevConfigVendorDir": "Kilgray"
+  },
+  "errorCodes": {
+    "desktopUnavailable": "DESKTOP_UNAVAILABLE",
+    "contractVersionMismatch": "CONTRACT_VERSION_MISMATCH",
+    "integrationNotInstalled": "INTEGRATION_NOT_INSTALLED",
+    "installRequiresElevation": "INSTALL_REQUIRES_ELEVATION",
+    "providerNotConfigured": "PROVIDER_NOT_CONFIGURED",
+    "translationFailed": "TRANSLATION_FAILED",
+    "translationTimeout": "TRANSLATION_TIMEOUT"
+  }
+}

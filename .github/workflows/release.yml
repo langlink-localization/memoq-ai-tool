@@ -1,0 +1,70 @@
+name: release
+
+on:
+  push:
+    tags:
+      - "v*"
+
+jobs:
+  windows-release:
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: 22
+
+      - name: Setup Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.11"
+
+      - name: Build plugin
+        shell: pwsh
+        run: ./scripts/build-windows.ps1 -Configuration Release
+
+      - name: Prepare desktop release resources
+        shell: pwsh
+        run: ./build/prepare-desktop-release.ps1 -Configuration Release
+
+      - name: Prepare bundled LiteLLM runtime
+        shell: pwsh
+        env:
+          PYTHON: ${{ env.pythonLocation }}\python.exe
+        run: ./build/prepare-litellm-runtime.ps1 -PythonBin "${{ env.pythonLocation }}\python.exe"
+
+      - name: Install desktop dependencies
+        working-directory: GatewayService
+        env:
+          PYTHON: ${{ env.pythonLocation }}\python.exe
+          npm_config_python: ${{ env.pythonLocation }}\python.exe
+        run: npm install
+
+      - name: Run desktop tests
+        working-directory: GatewayService
+        run: npm test
+
+      - name: Package Windows desktop app directory
+        working-directory: GatewayService
+        run: npm run package
+
+      - name: Create packaged desktop zip
+        working-directory: GatewayService
+        run: npm run zip:win-unpacked
+
+      - name: Package Windows installers
+        working-directory: GatewayService
+        continue-on-error: true
+        run: npm run make
+
+      - name: Publish GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            GatewayService/out/*.zip
+            GatewayService/out/make/**/*.exe
+            GatewayService/out/make/**/*.zip

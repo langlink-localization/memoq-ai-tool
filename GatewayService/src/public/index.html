@@ -1,0 +1,1343 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>memoQ AI Gateway</title>
+    <style>
+      :root {
+        --bg: #f6f8fa;
+        --bg-elevated: #ffffff;
+        --bg-subtle: #f3f4f6;
+        --bg-accent: #eef2ff;
+        --border: #d0d7de;
+        --border-strong: #afb8c1;
+        --text: #1f2328;
+        --muted-color: #59636e;
+        --primary: #0969da;
+        --primary-strong: #0550ae;
+        --success: #1a7f37;
+        --warning: #9a6700;
+        --danger: #cf222e;
+        --shadow: 0 20px 40px rgba(31, 35, 40, 0.08);
+      }
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        margin: 0;
+        font-family: "Segoe UI", system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+        background:
+          radial-gradient(circle at top left, rgba(9, 105, 218, 0.08), transparent 24%),
+          linear-gradient(180deg, #f6f8fa 0%, #f3f6f9 100%);
+        color: var(--text);
+      }
+      .container {
+        max-width: 1480px;
+        margin: 0 auto;
+        padding: 24px 18px 34px;
+      }
+      .app-shell {
+        display: grid;
+        grid-template-columns: 300px minmax(0, 1fr);
+        gap: 20px;
+        align-items: start;
+      }
+      .sidebar {
+        position: sticky;
+        top: 18px;
+        display: grid;
+        gap: 16px;
+      }
+      .sidebar-card {
+        padding: 18px;
+        border: 1px solid var(--border);
+        border-radius: 20px;
+        background: rgba(255, 255, 255, 0.92);
+        box-shadow: 0 12px 28px rgba(31, 35, 40, 0.06);
+      }
+      .sidebar-card h1 {
+        margin: 0 0 8px;
+        font-size: 1.85rem;
+        line-height: 1.05;
+        letter-spacing: -0.04em;
+      }
+      .sidebar-card p {
+        margin: 0;
+        color: var(--muted-color);
+        line-height: 1.55;
+      }
+      .sidebar-tags,
+      .row,
+      .provider-actions,
+      .section-actions,
+      .inline-actions {
+        display: flex;
+        gap: 10px;
+        flex-wrap: wrap;
+        align-items: center;
+      }
+      .sidebar-tag {
+        padding: 6px 10px;
+        border: 1px solid var(--border);
+        border-radius: 999px;
+        background: var(--bg-subtle);
+        color: var(--muted-color);
+        font-size: 13px;
+      }
+      .nav-list {
+        display: grid;
+        gap: 8px;
+      }
+      .nav-button {
+        display: grid;
+        gap: 4px;
+        width: 100%;
+        padding: 14px 16px;
+        text-align: left;
+        border: 1px solid var(--border);
+        border-radius: 16px;
+        background: transparent;
+        color: var(--text);
+        cursor: pointer;
+      }
+      .nav-button small {
+        color: var(--muted-color);
+      }
+      .nav-button.active {
+        background: linear-gradient(180deg, #ffffff 0%, #eff6ff 100%);
+        border-color: rgba(9, 105, 218, 0.3);
+        box-shadow: inset 0 0 0 1px rgba(9, 105, 218, 0.08);
+      }
+      .sidebar-note {
+        padding: 14px 16px;
+        border: 1px solid var(--border);
+        border-radius: 16px;
+        background: linear-gradient(180deg, rgba(255, 255, 255, 0.96), rgba(246, 248, 250, 0.96));
+      }
+      .sidebar-note strong {
+        display: block;
+        margin-bottom: 16px;
+      }
+      .content {
+        display: grid;
+        gap: 16px;
+      }
+      .hero {
+        display: grid;
+        grid-template-columns: minmax(0, 1.3fr) minmax(280px, 0.8fr);
+        gap: 18px;
+        padding: 24px;
+        border: 1px solid var(--border);
+        border-radius: 24px;
+        background: linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(246, 248, 250, 0.98));
+        box-shadow: var(--shadow);
+      }
+      .hero h2 {
+        margin: 0 0 8px;
+        font-size: clamp(1.8rem, 2.6vw, 2.5rem);
+        line-height: 1.06;
+        letter-spacing: -0.04em;
+      }
+      .hero p {
+        margin: 0;
+        color: var(--muted-color);
+        line-height: 1.6;
+      }
+      .hero-stats {
+        display: grid;
+        gap: 12px;
+      }
+      .hero-stat {
+        padding: 14px 16px;
+        border: 1px solid var(--border);
+        border-radius: 20px;
+        background: var(--bg-elevated);
+      }
+      .hero-stat strong {
+        display: block;
+        margin-bottom: 4px;
+      }
+      .card {
+        background: rgba(255, 255, 255, 0.94);
+        border: 1px solid var(--border);
+        border-radius: 22px;
+        box-shadow: 0 10px 24px rgba(31, 35, 40, 0.05);
+        padding: 20px;
+      }
+      .card h3,
+      .card h4 {
+        margin-top: 0;
+      }
+      .section-header {
+        display: flex;
+        justify-content: space-between;
+        gap: 16px;
+        align-items: flex-start;
+        margin-bottom: 16px;
+      }
+      .eyebrow {
+        margin: 0 0 6px;
+        font-size: 12px;
+        font-weight: 700;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        color: var(--primary-strong);
+      }
+      .tab-panel {
+        display: none;
+      }
+      .tab-panel.active {
+        display: block;
+        animation: fadeUp 0.22s ease;
+      }
+      .overview-grid,
+      .system-grid,
+      .prompt-grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 16px;
+      }
+      .field {
+        display: grid;
+        gap: 8px;
+        margin-bottom: 10px;
+      }
+      input,
+      textarea,
+      button,
+      select {
+        padding: 9px 11px;
+        border: 1px solid var(--border);
+        border-radius: 10px;
+        font: inherit;
+      }
+      input,
+      textarea,
+      select {
+        width: 100%;
+        background: rgba(255, 255, 255, 0.94);
+        color: var(--text);
+      }
+      button {
+        background: var(--primary);
+        color: white;
+        border-color: var(--primary);
+        cursor: pointer;
+        width: auto;
+      }
+      button.secondary {
+        background: white;
+        color: var(--text);
+      }
+      button.ghost {
+        background: var(--bg-subtle);
+        color: var(--primary-strong);
+      }
+      button:hover,
+      input:focus,
+      textarea:focus,
+      select:focus {
+        border-color: var(--primary);
+        box-shadow: 0 0 0 3px rgba(166, 72, 27, 0.12);
+        outline: none;
+      }
+      table {
+        width: 100%;
+        border-collapse: collapse;
+      }
+      th, td {
+        border-bottom: 1px solid rgba(113, 84, 50, 0.1);
+        padding: 10px 8px;
+        text-align: left;
+        vertical-align: top;
+      }
+      th {
+        background: #f6f8fa;
+        position: sticky;
+        top: 0;
+      }
+      .muted {
+        color: var(--muted-color);
+        font-size: 12px;
+      }
+      .grid3 {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 12px;
+      }
+      .grid4 {
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 12px;
+      }
+      .toggle {
+        display: inline-flex;
+        gap: 8px;
+        align-items: center;
+        padding: 10px 12px;
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        background: var(--bg-subtle);
+      }
+      .toggle input {
+        width: 16px;
+        height: 16px;
+        margin: 0;
+      }
+      .provider-table input,
+      .provider-table select {
+        width: 100%;
+        box-sizing: border-box;
+      }
+      textarea {
+        width: 100%;
+        box-sizing: border-box;
+        min-height: 88px;
+        font-family: Consolas, "SFMono-Regular", monospace;
+      }
+      .provider-table button {
+        padding: 6px 10px;
+      }
+      .provider-actions {
+        margin-top: 12px;
+      }
+      .provider-secret {
+        min-width: 180px;
+      }
+      .scroll-shell {
+        overflow: auto;
+        border: 1px solid var(--border);
+        border-radius: 18px;
+        background: var(--bg-elevated);
+      }
+      .status-box {
+        padding: 16px;
+        border: 1px solid var(--border);
+        border-radius: 16px;
+        background: var(--bg-elevated);
+        line-height: 1.65;
+      }
+      .note-box {
+        padding: 16px;
+        border: 1px solid var(--border);
+        border-radius: 16px;
+        background: linear-gradient(180deg, #ffffff 0%, #f6f8fa 100%);
+      }
+      .checklist {
+        display: grid;
+        gap: 12px;
+      }
+      .ok {
+        color: var(--success);
+        font-weight: 600;
+      }
+      .warn {
+        color: var(--warning);
+        font-weight: 600;
+      }
+      .bad {
+        color: var(--danger);
+        font-weight: 600;
+      }
+      @keyframes fadeUp {
+        from {
+          opacity: 0;
+          transform: translateY(8px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+      @media (max-width: 1080px) {
+        .app-shell,
+        .hero,
+        .overview-grid,
+        .system-grid,
+        .prompt-grid,
+        .grid4 {
+          grid-template-columns: 1fr;
+        }
+        .sidebar {
+          position: static;
+        }
+      }
+      @media (max-width: 760px) {
+        .grid3 {
+          grid-template-columns: 1fr;
+        }
+        .container {
+          padding: 14px 12px 26px;
+        }
+        .hero {
+          padding: 20px;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <div class="app-shell">
+        <aside class="sidebar">
+          <div class="sidebar-card">
+            <div class="sidebar-tags" style="margin-bottom: 12px;">
+              <span class="sidebar-tag">GitHub-inspired</span>
+              <span class="sidebar-tag">Electron settings</span>
+            </div>
+            <h1>memoQ AI Gateway</h1>
+            <p>Task-based settings for integration, system controls, providers, prompts, and diagnostics.</p>
+          </div>
+
+          <div class="sidebar-card">
+            <div class="nav-list">
+              <button class="nav-button active" type="button" data-tab="overview">Overview<small>Health, guidance, and quick actions</small></button>
+              <button class="nav-button" type="button" data-tab="integration">Integration<small>Install and repair memoQ integration</small></button>
+              <button class="nav-button" type="button" data-tab="system">System<small>Interfaces, networking, logging, and runtime</small></button>
+              <button class="nav-button" type="button" data-tab="providers">Providers<small>Routing, credentials, and defaults</small></button>
+              <button class="nav-button" type="button" data-tab="prompts">Prompts<small>Model instructions and injected context</small></button>
+              <button class="nav-button" type="button" data-tab="logs">Logs<small>Search and troubleshoot requests</small></button>
+            </div>
+          </div>
+
+          <div class="sidebar-note">
+            <strong>Suggested flow</strong>
+            <div class="checklist muted">
+              <span>1. Verify integration first.</span>
+              <span>2. Configure a real MT provider.</span>
+              <span>3. Tune prompts only after the base path works.</span>
+            </div>
+          </div>
+        </aside>
+
+        <main class="content">
+          <div class="hero">
+            <div>
+              <p class="eyebrow">Control Plane</p>
+              <h2>Organized like a desktop settings center</h2>
+              <p>System-level options stay in <strong>System</strong>, model behavior lives in <strong>Prompts</strong>, and provider setup stays isolated from operational troubleshooting.</p>
+              <div class="section-actions" style="margin-top: 18px;">
+                <button onclick="refreshStatus()">Refresh overview</button>
+                <button class="secondary" onclick="saveConfig()">Save current config</button>
+                <button class="ghost" onclick="loadLogs()">Refresh logs</button>
+              </div>
+            </div>
+            <div class="hero-stats">
+              <div class="hero-stat"><strong>Integration</strong><span class="muted">Install memoQ assets and confirm target paths.</span></div>
+              <div class="hero-stat"><strong>System</strong><span class="muted">Manage interfaces, networking, LiteLLM, and runtime limits.</span></div>
+              <div class="hero-stat"><strong>Prompts</strong><span class="muted">Keep prompt assets and model guidance in one place.</span></div>
+            </div>
+          </div>
+
+          <section id="tab-overview" class="tab-panel active">
+            <div class="overview-grid">
+              <div class="card">
+                <div class="section-header">
+                  <div>
+                    <p class="eyebrow">Gateway</p>
+                    <h3>Service health</h3>
+                    <p class="muted">Start here before changing deeper settings.</p>
+                  </div>
+                  <div class="section-actions">
+                    <button onclick="refreshStatus()">Refresh status</button>
+                    <button class="secondary" onclick="refreshProviderHealth()">Refresh providers</button>
+                  </div>
+                </div>
+                <div id="status" class="status-box muted">Loading status...</div>
+                <div id="providerHealthSummary" class="status-box muted" style="margin-top: 12px;">Loading provider health...</div>
+              </div>
+
+              <div class="card">
+                <div class="section-header">
+                  <div>
+                    <p class="eyebrow">Onboarding</p>
+                    <h3>Recommended path</h3>
+                    <p class="muted">Keep setup tasks in a predictable order to reduce cognitive load.</p>
+                  </div>
+                </div>
+                <div class="checklist">
+                  <div class="note-box">
+                    <strong>Step 1. Integration</strong>
+                    <p class="muted">Choose the memoQ version, verify installation paths, then install or repair the desktop integration.</p>
+                  </div>
+                  <div class="note-box">
+                    <strong>Step 2. Providers</strong>
+                    <p class="muted">Set a real default provider, endpoint, model, and API key. Mock providers are intentionally hidden.</p>
+                  </div>
+                  <div class="note-box">
+                    <strong>Step 3. Prompts</strong>
+                    <p class="muted">Tune prompts, glossary text, summary text, and context only after your system path is stable.</p>
+                  </div>
+                </div>
+                <div class="inline-actions" style="margin-top: 14px;">
+                  <button class="secondary" type="button" onclick="activateTab('integration')">Open integration</button>
+                  <button class="secondary" type="button" onclick="activateTab('providers')">Open providers</button>
+                  <button class="ghost" type="button" onclick="activateTab('prompts')">Open prompts</button>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <section id="tab-integration" class="tab-panel">
+            <div class="card">
+              <div class="section-header">
+                <div>
+                  <p class="eyebrow">memoQ Integration</p>
+                  <h3>Install and repair</h3>
+                  <p class="muted">Pick the target memoQ release and manage the desktop integration assets.</p>
+                </div>
+                <div class="section-actions">
+                  <button class="secondary" onclick="refreshIntegration()">Refresh integration</button>
+                  <button onclick="saveConfig()">Save integration settings</button>
+                </div>
+              </div>
+              <div class="grid3">
+                <label class="field">
+                  <strong>Target memoQ version</strong>
+                  <select id="cfgMemoQVersion">
+                    <option value="10">memoQ 10</option>
+                    <option value="11">memoQ 11</option>
+                    <option value="12">memoQ 12</option>
+                  </select>
+                </label>
+                <label class="field" style="grid-column: span 2;">
+                  <strong>Custom memoQ install root</strong>
+                  <input id="cfgMemoQCustomInstallDir" placeholder="For example D:\\Apps\\memoQ\\memoQ-11" />
+                </label>
+              </div>
+              <div id="integrationStatus" class="status-box muted">Checking integration...</div>
+              <div class="section-actions" style="margin-top: 14px;">
+                <button onclick="installIntegration()">Install into memoQ</button>
+                <button class="secondary" onclick="repairIntegration()">Repair installation</button>
+              </div>
+            </div>
+          </section>
+
+          <section id="tab-system" class="tab-panel">
+            <div class="system-grid">
+              <div class="card">
+                <div class="section-header">
+                  <div>
+                    <p class="eyebrow">Interfaces</p>
+                    <h3>Core system settings</h3>
+                    <p class="muted">Expose interfaces, control the local gateway, and manage logging behavior.</p>
+                  </div>
+                </div>
+                <div class="grid3">
+                  <label class="field">
+                    <strong>MT interface</strong>
+                    <div class="toggle"><input type="checkbox" id="cfgMtEnabled" /><span>Enabled</span></div>
+                  </label>
+                  <label class="field">
+                    <strong>TM interface</strong>
+                    <div class="toggle"><input type="checkbox" id="cfgTmEnabled" /><span>Enabled</span></div>
+                  </label>
+                  <label class="field">
+                    <strong>TB interface</strong>
+                    <div class="toggle"><input type="checkbox" id="cfgTbEnabled" /><span>Enabled</span></div>
+                  </label>
+                  <label class="field">
+                    <strong>QA interface</strong>
+                    <div class="toggle"><input type="checkbox" id="cfgQaEnabled" /><span>Enabled</span></div>
+                  </label>
+                  <label class="field">
+                    <strong>MT timeout (ms)</strong>
+                    <input id="cfgMtTimeout" type="number" min="1000" step="500" />
+                  </label>
+                  <label class="field">
+                    <strong>MT batch size (segments)</strong>
+                    <input id="cfgMtBatch" type="number" min="1" step="1" />
+                  </label>
+                  <label class="field">
+                    <strong>Gateway host</strong>
+                    <input id="cfgHost" placeholder="127.0.0.1" />
+                  </label>
+                  <label class="field">
+                    <strong>Gateway port</strong>
+                    <input id="cfgPort" type="number" min="1" max="65535" />
+                  </label>
+                  <label class="field">
+                    <strong>Log retention (days)</strong>
+                    <input id="cfgRetentionDays" type="number" min="1" step="1" />
+                  </label>
+                  <label class="field">
+                    <strong>Mask sensitive values</strong>
+                    <div class="toggle"><input id="cfgMaskSensitive" type="checkbox" /><span>Enabled</span></div>
+                  </label>
+                  <label class="field">
+                    <strong>Hash logged text</strong>
+                    <div class="toggle"><input id="cfgHashTextForLog" type="checkbox" /><span>Enabled</span></div>
+                  </label>
+                  <label class="field">
+                    <strong>Store raw payloads</strong>
+                    <div class="toggle"><input id="cfgStoreRawPayload" type="checkbox" /><span>Enabled</span></div>
+                  </label>
+                </div>
+              </div>
+
+              <div class="card">
+                <div class="section-header">
+                  <div>
+                    <p class="eyebrow">Model Routing</p>
+                    <h3>LiteLLM and runtime controls</h3>
+                    <p class="muted">Keep lower-level routing and execution controls out of the provider and prompt flows.</p>
+                  </div>
+                </div>
+                <div class="grid3">
+                  <label class="field">
+                    <strong>Enable LiteLLM</strong>
+                    <div class="toggle"><input id="cfgLiteLLMEnabled" type="checkbox" /><span>Enabled</span></div>
+                  </label>
+                  <label class="field">
+                    <strong>LiteLLM host</strong>
+                    <input id="cfgLiteLLMHost" placeholder="127.0.0.1" />
+                  </label>
+                  <label class="field">
+                    <strong>LiteLLM port</strong>
+                    <input id="cfgLiteLLMPort" type="number" min="1" max="65535" />
+                  </label>
+                  <label class="field">
+                    <strong>LiteLLM command</strong>
+                    <input id="cfgLiteLLMCli" placeholder="litellm" />
+                  </label>
+                  <label class="field">
+                    <strong>LiteLLM Python fallback</strong>
+                    <input id="cfgLiteLLMPython" placeholder="python3" />
+                  </label>
+                  <label class="field">
+                    <strong>Max segments per advanced batch</strong>
+                    <input id="cfgAdvBatchSegments" type="number" min="1" step="1" />
+                  </label>
+                  <label class="field">
+                    <strong>Max characters per batch</strong>
+                    <input id="cfgAdvBatchChars" type="number" min="0" step="1" />
+                  </label>
+                  <label class="field">
+                    <strong>Retry attempts</strong>
+                    <input id="cfgAdvRetryAttempts" type="number" min="1" step="1" />
+                  </label>
+                  <label class="field">
+                    <strong>Retry backoff (ms)</strong>
+                    <input id="cfgAdvRetryBackoff" type="number" min="0" step="50" />
+                  </label>
+                  <label class="field">
+                    <strong>Context window before</strong>
+                    <input id="cfgAdvContextBefore" type="number" min="0" step="1" />
+                  </label>
+                  <label class="field">
+                    <strong>Context window after</strong>
+                    <input id="cfgAdvContextAfter" type="number" min="0" step="1" />
+                  </label>
+                  <label class="field">
+                    <strong>Max concurrency</strong>
+                    <input id="cfgAdvMaxConcurrency" type="number" min="1" step="1" />
+                  </label>
+                  <label class="field">
+                    <strong>Requests per second</strong>
+                    <input id="cfgAdvRequestsPerSecond" type="number" min="0" step="1" />
+                  </label>
+                  <label class="field">
+                    <strong>Append missing tags to output</strong>
+                    <div class="toggle"><input id="cfgAdvInsertTagsToEnd" type="checkbox" /><span>Enabled</span></div>
+                  </label>
+                  <label class="field">
+                    <strong>Normalize tag spacing</strong>
+                    <div class="toggle"><input id="cfgAdvNormalizeTagSpaces" type="checkbox" /><span>Enabled</span></div>
+                  </label>
+                  <label class="field">
+                    <strong>Enable MT cache</strong>
+                    <div class="toggle"><input id="cfgAdvEnableCache" type="checkbox" /><span>Enabled</span></div>
+                  </label>
+                </div>
+                <div class="section-actions" style="margin-top: 14px;">
+                  <button onclick="saveConfig()">Save system settings</button>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <section id="tab-providers" class="tab-panel">
+            <div class="card">
+              <div class="section-header">
+                <div>
+                  <p class="eyebrow">Routing</p>
+                  <h3>MT providers</h3>
+                  <p class="muted">Only production-oriented provider types are shown here. Mock providers are removed from the UI.</p>
+                </div>
+                <div class="section-actions">
+                  <button class="secondary" onclick="refreshProviderHealth()">Refresh health</button>
+                  <button onclick="saveConfig()">Save provider settings</button>
+                </div>
+              </div>
+              <div class="row" style="margin-bottom: 12px;">
+                <label class="field" style="min-width: 320px;">
+                  <strong>Default provider</strong>
+                  <select id="cfgMtDefaultProvider"></select>
+                </label>
+              </div>
+              <div class="scroll-shell">
+                <table class="provider-table">
+                  <thead>
+                    <tr>
+                      <th>ID</th>
+                      <th>Name</th>
+                      <th>Type</th>
+                      <th>Endpoint</th>
+                      <th>Model</th>
+                      <th>Enabled</th>
+                      <th>API Key</th>
+                      <th>Action</th>
+                    </tr>
+                  </thead>
+                  <tbody id="providerConfigBody"></tbody>
+                </table>
+              </div>
+              <div class="provider-actions">
+                <button onclick="addProviderRow()">Add provider</button>
+                <button class="secondary" onclick="saveConfig()">Save provider settings</button>
+              </div>
+            </div>
+          </section>
+
+          <section id="tab-prompts" class="tab-panel">
+            <div class="prompt-grid">
+              <div class="card">
+                <div class="section-header">
+                  <div>
+                    <p class="eyebrow">Prompt Assets</p>
+                    <h3>Prompt configuration</h3>
+                    <p class="muted">Keep all prompt-related content together instead of mixing it with runtime controls.</p>
+                  </div>
+                </div>
+                <div class="grid3">
+                  <label class="field">
+                    <strong>Use batch prompts for multi-segment requests</strong>
+                    <div class="toggle"><input id="cfgAdvUseBatchPrompt" type="checkbox" /><span>Enabled</span></div>
+                  </label>
+                  <label class="field">
+                    <strong>Inject context</strong>
+                    <div class="toggle"><input id="cfgAdvEnableContext" type="checkbox" /><span>Enabled</span></div>
+                  </label>
+                  <label class="field">
+                    <strong>Inject TM hints</strong>
+                    <div class="toggle"><input id="cfgAdvEnableTm" type="checkbox" /><span>Enabled</span></div>
+                  </label>
+                  <label class="field">
+                    <strong>Inject glossary text</strong>
+                    <div class="toggle"><input id="cfgAdvEnableGlossary" type="checkbox" /><span>Enabled</span></div>
+                  </label>
+                  <label class="field">
+                    <strong>Inject summary text</strong>
+                    <div class="toggle"><input id="cfgAdvEnableSummary" type="checkbox" /><span>Enabled</span></div>
+                  </label>
+                </div>
+                <label class="field">
+                  <strong>System prompt</strong>
+                  <textarea id="cfgAdvSystemPrompt" placeholder="Single-segment system prompt"></textarea>
+                </label>
+                <label class="field">
+                  <strong>User prompt</strong>
+                  <textarea id="cfgAdvUserPrompt" placeholder="Single-segment user prompt"></textarea>
+                </label>
+                <label class="field">
+                  <strong>Batch system prompt</strong>
+                  <textarea id="cfgAdvBatchSystemPrompt" placeholder="Multi-segment system prompt"></textarea>
+                </label>
+                <label class="field">
+                  <strong>Batch user prompt</strong>
+                  <textarea id="cfgAdvBatchUserPrompt" placeholder="Multi-segment user prompt"></textarea>
+                </label>
+              </div>
+
+              <div class="card">
+                <div class="section-header">
+                  <div>
+                    <p class="eyebrow">Injected Content</p>
+                    <h3>Glossary and summary</h3>
+                    <p class="muted">These are prompt-adjacent assets, so they live here instead of in system settings.</p>
+                  </div>
+                </div>
+                <label class="field">
+                  <strong>Glossary entries</strong>
+                  <textarea id="cfgAdvGlossaryEntries" placeholder="One pair per line: source,target"></textarea>
+                </label>
+                <label class="field">
+                  <strong>Document summary</strong>
+                  <textarea id="cfgAdvSummaryText" placeholder="Summary text injected into the model context"></textarea>
+                </label>
+                <div class="section-actions">
+                  <button onclick="saveConfig()">Save prompt settings</button>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <section id="tab-logs" class="tab-panel">
+            <div class="card">
+              <div class="section-header">
+                <div>
+                  <p class="eyebrow">Diagnostics</p>
+                  <h3>Query logs</h3>
+                  <p class="muted">Filter by interface, provider, model, request id, or time range.</p>
+                </div>
+              </div>
+              <div class="grid4">
+                <label class="field"><strong>Interface</strong>
+                  <select id="logInterface">
+                    <option value="">All</option>
+                    <option value="mt">MT</option>
+                    <option value="tm">TM</option>
+                    <option value="tb">TB</option>
+                    <option value="qa">QA</option>
+                  </select>
+                </label>
+                <label class="field"><strong>Request type</strong>
+                  <input id="logRequestType" placeholder="translate / lookup / search / check" />
+                </label>
+                <label class="field"><strong>Provider</strong>
+                  <input id="logProvider" placeholder="For example openai-main" />
+                </label>
+                <label class="field"><strong>Model</strong>
+                  <input id="logModel" placeholder="Optional" />
+                </label>
+                <label class="field"><strong>Document ID</strong>
+                  <input id="logDocumentId" placeholder="Optional" />
+                </label>
+                <label class="field"><strong>Segment hash</strong>
+                  <input id="logSegmentHash" placeholder="32-character hash" />
+                </label>
+                <label class="field"><strong>Start time</strong>
+                  <input id="logStart" type="datetime-local" />
+                </label>
+                <label class="field"><strong>End time</strong>
+                  <input id="logEnd" type="datetime-local" />
+                </label>
+                <label class="field"><strong>Request ID</strong>
+                  <input id="logRequestId" placeholder="Optional" />
+                </label>
+                <label class="field"><strong>Keyword</strong>
+                  <input id="logKeyword" placeholder="error, provider, payload, timeout..." />
+                </label>
+                <label class="field"><strong>Status</strong>
+                  <select id="logStatus">
+                    <option value="">All</option>
+                    <option value="0">Success</option>
+                    <option value="1">Failure</option>
+                  </select>
+                </label>
+                <label class="field"><strong>Include raw payload</strong>
+                  <div class="toggle"><input id="logIncludePayload" type="checkbox" /><span>Enabled</span></div>
+                </label>
+              </div>
+              <div class="section-actions" style="margin-top: 14px;">
+                <button onclick="loadLogs()">Search logs</button>
+              </div>
+              <div class="scroll-shell" style="max-height: 520px; margin-top: 14px;">
+                <table id="logTable">
+                  <thead>
+                    <tr>
+                      <th>Time</th>
+                      <th>Interface</th>
+                      <th>Request type</th>
+                      <th>Provider</th>
+                      <th>Model</th>
+                      <th>Error code</th>
+                      <th>Document ID</th>
+                      <th>Status</th>
+                      <th>Elapsed (ms)</th>
+                      <th>Request ID</th>
+                      <th>Segment hash</th>
+                      <th>Request bytes</th>
+                      <th>Response bytes</th>
+                    </tr>
+                  </thead>
+                  <tbody id="logBody"></tbody>
+                </table>
+              </div>
+            </div>
+          </section>
+        </main>
+      </div>
+    </div>
+
+    <script src="./uiState.js"></script>
+    <script>
+      const API_BASE = window.location.origin;
+      const TAB_STORAGE_KEY = 'memoq-ai-gateway.active-tab';
+
+      function apiFetch(path, options) {
+        return fetch(`${API_BASE}${path}`, options);
+      }
+
+      function activateTab(tabName) {
+        document.querySelectorAll('.nav-button').forEach((button) => {
+          button.classList.toggle('active', button.dataset.tab === tabName);
+        });
+
+        document.querySelectorAll('.tab-panel').forEach((panel) => {
+          panel.classList.toggle('active', panel.id === `tab-${tabName}`);
+        });
+
+        window.localStorage.setItem(TAB_STORAGE_KEY, tabName);
+      }
+
+      function initTabs() {
+        document.querySelectorAll('.nav-button').forEach((button) => {
+          button.addEventListener('click', () => activateTab(button.dataset.tab));
+        });
+
+        const storedTab = window.localStorage.getItem(TAB_STORAGE_KEY);
+        if (storedTab && document.getElementById(`tab-${storedTab}`)) {
+          activateTab(storedTab);
+        }
+      }
+
+      function formatStatus(enabled) {
+        return enabled ? 'ok' : 'warn';
+      }
+
+      function providerTypeOptions(selectedType) {
+        const types = ['openai-compatible', 'openai'];
+        return types.map((type) => {
+          const selected = type === selectedType ? 'selected' : '';
+          return `<option value="${type}" ${selected}>${type}</option>`;
+        }).join('');
+      }
+
+      function syncDefaultProviderOptions(selectedId) {
+        const select = document.getElementById('cfgMtDefaultProvider');
+        const providers = collectMtProviders({ includeEmptyRows: false });
+        select.innerHTML = '';
+
+        providers.forEach((provider) => {
+          const option = document.createElement('option');
+          option.value = provider.id;
+          option.textContent = `${provider.name || provider.id} (${provider.id})`;
+          if (provider.id === selectedId) option.selected = true;
+          select.appendChild(option);
+        });
+
+        if (!select.value && providers.length > 0) {
+          select.value = providers[0].id;
+        }
+      }
+
+      function createProviderRow(provider = {}) {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td><input data-field="id" placeholder="provider-id" value="${provider.id || ''}" /></td>
+          <td><input data-field="name" placeholder="Display Name" value="${provider.name || ''}" /></td>
+          <td>
+            <select data-field="type">
+              ${providerTypeOptions(provider.type || 'openai-compatible')}
+            </select>
+          </td>
+          <td><input data-field="endpoint" placeholder="https://api.example.com/v1" value="${provider.endpoint || ''}" /></td>
+          <td><input data-field="model" placeholder="gpt-4.1-mini" value="${provider.model || ''}" /></td>
+          <td style="text-align:center;"><input data-field="enabled" type="checkbox" ${provider.enabled !== false ? 'checked' : ''} /></td>
+          <td>
+            <input class="provider-secret" data-field="apiKey" type="password" placeholder="${provider.hasApiKey ? 'Already saved, leave blank to keep it' : 'Enter a new API key'}" />
+          </td>
+          <td><button type="button" class="ghost" onclick="removeProviderRow(this)">Remove</button></td>
+        `;
+
+        tr.querySelectorAll('input, select').forEach((el) => {
+          el.addEventListener('change', () => syncDefaultProviderOptions(document.getElementById('cfgMtDefaultProvider').value));
+          el.addEventListener('input', () => syncDefaultProviderOptions(document.getElementById('cfgMtDefaultProvider').value));
+        });
+
+        return tr;
+      }
+
+      function renderProviderRows(providers, defaultProviderId) {
+        const tbody = document.getElementById('providerConfigBody');
+        tbody.innerHTML = '';
+        providers
+          .filter((provider) => provider && provider.type !== 'mock')
+          .forEach((provider) => tbody.appendChild(createProviderRow(provider)));
+        syncDefaultProviderOptions(defaultProviderId);
+      }
+
+      function addProviderRow() {
+        const tbody = document.getElementById('providerConfigBody');
+        tbody.appendChild(createProviderRow({
+          id: '',
+          name: '',
+          type: 'openai-compatible',
+          endpoint: '',
+          model: '',
+          enabled: true,
+          hasApiKey: false,
+        }));
+        syncDefaultProviderOptions(document.getElementById('cfgMtDefaultProvider').value);
+      }
+
+      function removeProviderRow(button) {
+        const row = button.closest('tr');
+        if (row) row.remove();
+        syncDefaultProviderOptions(document.getElementById('cfgMtDefaultProvider').value);
+      }
+
+      function collectMtProviders(options = {}) {
+        const includeEmptyRows = options.includeEmptyRows === true;
+        return Array.from(document.querySelectorAll('#providerConfigBody tr'))
+          .map((row) => {
+            const get = (field) => row.querySelector(`[data-field="${field}"]`);
+            return {
+              id: get('id').value.trim(),
+              name: get('name').value.trim(),
+              type: get('type').value.trim(),
+              endpoint: get('endpoint').value.trim(),
+              model: get('model').value.trim(),
+              enabled: get('enabled').checked,
+              apiKey: get('apiKey').value,
+            };
+          })
+          .filter((provider) => provider.type !== 'mock')
+          .filter((provider) => includeEmptyRows || provider.id || provider.name || provider.endpoint || provider.model);
+      }
+
+      function escapeHtml(value) {
+        return String(value || '')
+          .replaceAll('&', '&amp;')
+          .replaceAll('<', '&lt;')
+          .replaceAll('>', '&gt;')
+          .replaceAll('"', '&quot;')
+          .replaceAll("'", '&#39;');
+      }
+
+      async function saveProviderSecrets(providers) {
+        for (const provider of providers) {
+          if (!provider.id || !provider.apiKey) continue;
+          await apiFetch(`/admin/config/secrets/${encodeURIComponent(provider.id)}`, {
+            method: 'POST',
+            headers: { 'content-type': 'application/json' },
+            body: JSON.stringify({ apiKey: provider.apiKey }),
+          });
+        }
+      }
+
+      async function refreshStatus() {
+        const statusText = document.getElementById('status');
+        const resp = await apiFetch('/health');
+        const data = await resp.json();
+        const interfaces = data.interfaces || {};
+        const litellm = data.litellm || {};
+        const mtRuntime = data.mtRuntime || {};
+        let litellmSummary = 'LiteLLM: <span class="muted">disabled</span>';
+        if (litellm.enabled) {
+          litellmSummary = litellm.running
+            ? 'LiteLLM: <span class="ok">ready</span>'
+            : `LiteLLM: <span class="bad">not ready</span>${litellm.error ? ` <span class="muted">(${escapeHtml(litellm.error)})</span>` : ''}${litellm.installCommand ? ` <span class="muted">[install] ${escapeHtml(litellm.installCommand)}</span>` : ''}`;
+        }
+        statusText.innerHTML =
+          `Gateway ready | Version: <b>${data.version || 'n/a'}</b> | ` +
+          `MT: <span class="${formatStatus(interfaces.mt)}">${interfaces.mt}</span>, ` +
+          `TM: <span class="${formatStatus(interfaces.tm)}">${interfaces.tm}</span>, ` +
+          `TB: <span class="${formatStatus(interfaces.tb)}">${interfaces.tb}</span>, ` +
+          `QA: <span class="${formatStatus(interfaces.qa)}">${interfaces.qa}</span> | ` +
+          litellmSummary +
+          ` | Runtime: <span class="muted">concurrency=${escapeHtml(mtRuntime.maxConcurrency || 1)}, rps=${escapeHtml(mtRuntime.requestsPerSecond || 0)}, queued=${escapeHtml(mtRuntime.queuedCount || 0)}</span>`;
+      }
+
+      async function refreshProviderHealth() {
+        const summaryText = document.getElementById('providerHealthSummary');
+        const resp = await apiFetch('/admin/providers/health');
+        const data = await resp.json();
+        const summary = data.summary || {};
+        const items = Array.isArray(data.items) ? data.items : [];
+        const unhealthy = items.filter((item) => item && item.healthy === false && item.enabled !== false);
+        const detailText = unhealthy.length
+          ? ` | issues: ${unhealthy.map((item) => `${item.providerId}:${item.code}${item.message ? ` (${item.message})` : ''}`).join(', ')}`
+          : '';
+        summaryText.innerHTML = escapeHtml(`providers: total=${summary.total || 0}, enabled=${summary.enabled || 0}, healthy=${summary.healthy || 0}, unhealthy=${summary.unhealthy || 0}${detailText}`);
+      }
+
+      async function refreshIntegration() {
+        const statusText = document.getElementById('integrationStatus');
+        const resp = await apiFetch('/desktop/integration/status');
+        const data = await resp.json();
+        const viewModel = window.memoqUiState.buildIntegrationStatusViewModel(data);
+
+        if (!viewModel.foundInstallation) {
+          statusText.innerHTML = 'No memoQ Desktop installation was detected.';
+          return;
+        }
+
+        const assetSummary = viewModel.assetsReady
+          ? '<span class="ok">integration assets are ready</span>'
+          : '<span class="bad">integration assets are missing, build the plugin first</span>';
+        const targetSummary = viewModel.customInstallDir
+          ? `Custom root: <code>${escapeHtml(viewModel.customInstallDir)}</code>`
+          : `Default root: <code>${escapeHtml(`C:\\Program Files\\memoQ\\memoQ-${viewModel.requestedMemoQVersion}`)}</code>`;
+
+        statusText.innerHTML =
+          `Status: <b>${escapeHtml(viewModel.overallStatus)}</b> | ` +
+          `memoQ: <span class="${escapeHtml(viewModel.installationStatusClass)}">${escapeHtml(viewModel.installationName)}</span> | ` +
+          `Target: <span class="${escapeHtml(viewModel.installationStatusClass)}">${escapeHtml(viewModel.installationStatus)}</span> | ` +
+          `${targetSummary} | ` +
+          `Addins: <code>${escapeHtml(viewModel.addinsDir)}</code> | ` +
+          `ClientDevConfig: <code>${escapeHtml(viewModel.clientDevConfigTarget)}</code> | ` +
+          assetSummary;
+      }
+
+      async function runIntegrationAction(path) {
+        const resp = await apiFetch(path, { method: 'POST' });
+        const payload = await resp.json();
+        if (!resp.ok) {
+          throw new Error(payload?.error?.message || 'Integration action failed');
+        }
+        await refreshIntegration();
+      }
+
+      async function installIntegration() {
+        try {
+          await runIntegrationAction('/desktop/integration/install');
+        } catch (error) {
+          window.alert(error.message);
+        }
+      }
+
+      async function repairIntegration() {
+        try {
+          await runIntegrationAction('/desktop/integration/repair');
+        } catch (error) {
+          window.alert(error.message);
+        }
+      }
+
+      function toDatetimeLocal(value) {
+        if (!value) return '';
+        const d = new Date(value);
+        if (Number.isNaN(d.getTime())) return '';
+        const z = new Date(d.getTime() - d.getTimezoneOffset() * 60000);
+        return z.toISOString().slice(0, 16);
+      }
+
+      async function loadConfig() {
+        const resp = await apiFetch('/admin/config');
+        const config = await resp.json();
+        document.getElementById('cfgMtEnabled').checked = config.interfaces.mt.enabled;
+        document.getElementById('cfgTmEnabled').checked = config.interfaces.tm.enabled;
+        document.getElementById('cfgTbEnabled').checked = config.interfaces.tb.enabled;
+        document.getElementById('cfgQaEnabled').checked = config.interfaces.qa.enabled;
+        document.getElementById('cfgMtTimeout').value = config.interfaces.mt.requestTimeoutMs || 120000;
+        document.getElementById('cfgMtBatch').value = config.interfaces.mt.maxBatchSegments || 8;
+        document.getElementById('cfgHost').value = config.host || '127.0.0.1';
+        document.getElementById('cfgPort').value = config.port || 5271;
+        document.getElementById('cfgRetentionDays').value = (config.log && Number(config.log.retentionDays)) || 30;
+        document.getElementById('cfgMaskSensitive').checked = !!(config.log && config.log.maskSensitive);
+        document.getElementById('cfgHashTextForLog').checked = !!(config.log && config.log.hashTextForLog);
+        document.getElementById('cfgStoreRawPayload').checked = !!(config.log && config.log.storeRawPayload);
+        document.getElementById('cfgMemoQVersion').value = (config.integration && config.integration.memoqVersion) || '11';
+        document.getElementById('cfgMemoQCustomInstallDir').value = (config.integration && config.integration.customInstallDir) || '';
+        document.getElementById('cfgLiteLLMEnabled').checked = !!(config.litellm && config.litellm.enabled);
+        document.getElementById('cfgLiteLLMHost').value = (config.litellm && config.litellm.host) || '127.0.0.1';
+        document.getElementById('cfgLiteLLMPort').value = (config.litellm && config.litellm.port) || 4000;
+        document.getElementById('cfgLiteLLMCli').value = (config.litellm && config.litellm.cliBin) || '';
+        document.getElementById('cfgLiteLLMPython').value = (config.litellm && config.litellm.pythonBin) || 'python3';
+        const advanced = (config.interfaces.mt && config.interfaces.mt.advanced) || {};
+        const prompts = advanced.prompts || {};
+        document.getElementById('cfgAdvBatchSegments').value = (advanced.batching && advanced.batching.maxSegmentsPerBatch) || config.interfaces.mt.maxBatchSegments || 8;
+        document.getElementById('cfgAdvBatchChars').value = (advanced.batching && advanced.batching.maxCharactersPerBatch) || 0;
+        document.getElementById('cfgAdvRetryAttempts').value = (advanced.retry && advanced.retry.maxAttempts) || 2;
+        document.getElementById('cfgAdvRetryBackoff').value = (advanced.retry && advanced.retry.backoffMs) || 150;
+        document.getElementById('cfgAdvContextBefore').value = (advanced.context && advanced.context.windowBefore) || 1;
+        document.getElementById('cfgAdvContextAfter').value = (advanced.context && advanced.context.windowAfter) || 1;
+        document.getElementById('cfgAdvMaxConcurrency').value = (advanced.runtime && advanced.runtime.maxConcurrency) || 1;
+        document.getElementById('cfgAdvRequestsPerSecond').value = (advanced.runtime && advanced.runtime.requestsPerSecond) || 0;
+        document.getElementById('cfgAdvUseBatchPrompt').checked = !!(prompts.useBatchPromptForMultiSegment);
+        document.getElementById('cfgAdvInsertTagsToEnd').checked = !!(advanced.requestTypePolicy && advanced.requestTypePolicy.insertRequiredTagsToEnd);
+        document.getElementById('cfgAdvNormalizeTagSpaces').checked = !!(advanced.requestTypePolicy && advanced.requestTypePolicy.normalizeWhitespaceAroundTags);
+        document.getElementById('cfgAdvEnableCache').checked = !!(advanced.cache && advanced.cache.enabled);
+        document.getElementById('cfgAdvEnableGlossary').checked = !!(advanced.glossary && advanced.glossary.enabled);
+        document.getElementById('cfgAdvEnableSummary').checked = !!(advanced.summary && advanced.summary.enabled);
+        document.getElementById('cfgAdvEnableContext').checked = !!(advanced.context && advanced.context.enabled);
+        document.getElementById('cfgAdvEnableTm').checked = !(advanced.tm && advanced.tm.enabled === false);
+        document.getElementById('cfgAdvSystemPrompt').value = prompts.systemPrompt || '';
+        document.getElementById('cfgAdvUserPrompt').value = prompts.userPrompt || '';
+        document.getElementById('cfgAdvBatchSystemPrompt').value = prompts.batchSystemPrompt || '';
+        document.getElementById('cfgAdvBatchUserPrompt').value = prompts.batchUserPrompt || '';
+        document.getElementById('cfgAdvGlossaryEntries').value = (advanced.glossary && advanced.glossary.entriesText) || '';
+        document.getElementById('cfgAdvSummaryText').value = (advanced.summary && advanced.summary.text) || '';
+        renderProviderRows(config.interfaces.mt.providers || [], config.interfaces.mt.defaultProviderId || '');
+      }
+
+      async function saveConfig() {
+        const providers = collectMtProviders();
+        const defaultProviderSelect = document.getElementById('cfgMtDefaultProvider');
+        const body = {
+          host: document.getElementById('cfgHost').value.trim() || '127.0.0.1',
+          port: Number(document.getElementById('cfgPort').value || 5271),
+          interfaces: {
+            mt: {
+              enabled: document.getElementById('cfgMtEnabled').checked,
+              requestTimeoutMs: Number(document.getElementById('cfgMtTimeout').value || 120000),
+              maxBatchSegments: Number(document.getElementById('cfgMtBatch').value || 8),
+              defaultProviderId: defaultProviderSelect.value,
+              advanced: {
+                requestTypePolicy: {
+                  insertRequiredTagsToEnd: document.getElementById('cfgAdvInsertTagsToEnd').checked,
+                  normalizeWhitespaceAroundTags: document.getElementById('cfgAdvNormalizeTagSpaces').checked,
+                },
+                batching: {
+                  maxSegmentsPerBatch: Number(document.getElementById('cfgAdvBatchSegments').value || document.getElementById('cfgMtBatch').value || 8),
+                  maxCharactersPerBatch: Number(document.getElementById('cfgAdvBatchChars').value || 0),
+                },
+                retry: {
+                  enabled: true,
+                  maxAttempts: Number(document.getElementById('cfgAdvRetryAttempts').value || 2),
+                  backoffMs: Number(document.getElementById('cfgAdvRetryBackoff').value || 150),
+                },
+                cache: {
+                  enabled: document.getElementById('cfgAdvEnableCache').checked,
+                },
+                prompts: {
+                  activeTemplateId: 'default',
+                  systemPrompt: document.getElementById('cfgAdvSystemPrompt').value,
+                  userPrompt: document.getElementById('cfgAdvUserPrompt').value,
+                  batchSystemPrompt: document.getElementById('cfgAdvBatchSystemPrompt').value,
+                  batchUserPrompt: document.getElementById('cfgAdvBatchUserPrompt').value,
+                  useBatchPromptForMultiSegment: document.getElementById('cfgAdvUseBatchPrompt').checked,
+                  templates: [
+                    {
+                      id: 'default',
+                      name: 'Default CAT Prompt',
+                      systemPrompt: document.getElementById('cfgAdvSystemPrompt').value,
+                      userPrompt: document.getElementById('cfgAdvUserPrompt').value,
+                      batchSystemPrompt: document.getElementById('cfgAdvBatchSystemPrompt').value,
+                      batchUserPrompt: document.getElementById('cfgAdvBatchUserPrompt').value,
+                    },
+                  ],
+                },
+                glossary: {
+                  enabled: document.getElementById('cfgAdvEnableGlossary').checked,
+                  delimiter: ',',
+                  entriesText: document.getElementById('cfgAdvGlossaryEntries').value,
+                },
+                summary: {
+                  enabled: document.getElementById('cfgAdvEnableSummary').checked,
+                  text: document.getElementById('cfgAdvSummaryText').value,
+                },
+                context: {
+                  enabled: document.getElementById('cfgAdvEnableContext').checked,
+                  includeSource: true,
+                  windowBefore: Number(document.getElementById('cfgAdvContextBefore').value || 1),
+                  windowAfter: Number(document.getElementById('cfgAdvContextAfter').value || 1),
+                },
+                runtime: {
+                  maxConcurrency: Number(document.getElementById('cfgAdvMaxConcurrency').value || 1),
+                  requestsPerSecond: Number(document.getElementById('cfgAdvRequestsPerSecond').value || 0),
+                },
+                tm: {
+                  enabled: document.getElementById('cfgAdvEnableTm').checked,
+                },
+              },
+              providers: providers.map((provider) => ({
+                id: provider.id,
+                name: provider.name,
+                type: provider.type,
+                endpoint: provider.endpoint,
+                model: provider.model,
+                enabled: provider.enabled,
+              })),
+            },
+            tm: { enabled: document.getElementById('cfgTmEnabled').checked },
+            tb: { enabled: document.getElementById('cfgTbEnabled').checked },
+            qa: { enabled: document.getElementById('cfgQaEnabled').checked },
+          },
+          log: {
+            retentionDays: Number(document.getElementById('cfgRetentionDays').value || 30),
+            maskSensitive: document.getElementById('cfgMaskSensitive').checked,
+            hashTextForLog: document.getElementById('cfgHashTextForLog').checked,
+            storeRawPayload: document.getElementById('cfgStoreRawPayload').checked,
+          },
+          integration: {
+            memoqVersion: document.getElementById('cfgMemoQVersion').value || '11',
+            customInstallDir: document.getElementById('cfgMemoQCustomInstallDir').value.trim(),
+          },
+          litellm: {
+            enabled: document.getElementById('cfgLiteLLMEnabled').checked,
+            host: document.getElementById('cfgLiteLLMHost').value.trim() || '127.0.0.1',
+            port: Number(document.getElementById('cfgLiteLLMPort').value || 4000),
+            cliBin: document.getElementById('cfgLiteLLMCli').value.trim(),
+            pythonBin: document.getElementById('cfgLiteLLMPython').value.trim() || 'python3',
+          },
+        };
+        await apiFetch('/admin/config', {
+          method: 'POST',
+          headers: { 'content-type': 'application/json' },
+          body: JSON.stringify(body),
+        });
+        await saveProviderSecrets(providers);
+        await loadConfig();
+        await refreshStatus();
+        await refreshProviderHealth();
+        await refreshIntegration();
+      }
+
+      async function loadLogs() {
+        const params = new URLSearchParams();
+        const iface = document.getElementById('logInterface').value;
+        const requestType = document.getElementById('logRequestType').value.trim();
+        const provider = document.getElementById('logProvider').value.trim();
+        const model = document.getElementById('logModel').value.trim();
+        const documentId = document.getElementById('logDocumentId').value.trim();
+        const segmentHash = document.getElementById('logSegmentHash').value.trim();
+        const requestId = document.getElementById('logRequestId').value.trim();
+        const keyword = document.getElementById('logKeyword').value.trim();
+        const status = document.getElementById('logStatus').value;
+        const start = document.getElementById('logStart').value;
+        const end = document.getElementById('logEnd').value;
+        const includePayload = document.getElementById('logIncludePayload').checked;
+
+        if (iface) params.set('interface', iface);
+        if (requestType) params.set('requestType', requestType);
+        if (provider) params.set('provider', provider);
+        if (model) params.set('model', model);
+        if (documentId) params.set('documentId', documentId);
+        if (segmentHash) params.set('segmentHash', segmentHash);
+        if (requestId) params.set('requestId', requestId);
+        if (keyword) params.set('keyword', keyword);
+        if (status) params.set('status', status);
+        if (start) params.set('start', new Date(start).toISOString());
+        if (end) params.set('end', new Date(end).toISOString());
+        if (includePayload) params.set('includePayload', 'true');
+
+        const resp = await apiFetch(`/logs?${params.toString()}`);
+        const data = await resp.json();
+        const tbody = document.getElementById('logBody');
+        tbody.innerHTML = '';
+
+        data.items.forEach((item) => {
+          const tr = document.createElement('tr');
+          tr.innerHTML =
+            `<td>${new Date(item.createdAt).toLocaleString()}</td>` +
+            `<td>${item.interfaceName}</td>` +
+            `<td>${item.requestType || '-'}</td>` +
+            `<td>${item.providerId || '-'}</td>` +
+            `<td>${item.model || '-'}</td>` +
+            `<td>${item.errorCode || '-'}</td>` +
+            `<td>${item.documentId || '-'}</td>` +
+            `<td>${item.status === 0 ? '<span class="ok">Success</span>' : '<span class="bad">Failure</span>'}</td>` +
+            `<td>${item.elapsedMs || 0}</td>` +
+            `<td>${item.requestId}</td>` +
+            `<td>${item.segmentHashes || '-'}</td>` +
+            `<td>${item.requestPayloadBytes || 0}</td>` +
+            `<td>${item.responsePayloadBytes || 0}</td>`;
+          tbody.appendChild(tr);
+        });
+      }
+
+      initTabs();
+      refreshStatus();
+      refreshProviderHealth();
+      refreshIntegration();
+      loadConfig();
+      loadLogs();
+      setInterval(loadLogs, 10000);
+      setInterval(refreshStatus, 15000);
+      setInterval(refreshProviderHealth, 20000);
+      setInterval(refreshIntegration, 30000);
+    </script>
+  </body>
+</html>
